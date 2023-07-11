@@ -8,10 +8,8 @@
 <img width="1440" alt="2" src="https://github.com/princesskim/Final/assets/102868454/6cfe799b-1120-4dd9-b3e5-d55b8bac82d8">
 클릭을 하면 화면이 전환되도록 메인 루프 안에서 각 스크린을 부르는 플래그 변수를 선언하였다. 시작 화면 이후에 나오는 것은 게임의 컨셉과 게임 방법을 알려주는 튜토리올이다. 게임 유저는 호기심 많은 강아지의 주인이 된다.
 
-
 <img width="1440" alt="3" src="https://github.com/princesskim/Final/assets/102868454/8dc1291d-724e-4877-87dc-f002bfab089d">
-강아지들은 귀를 펄럭이면 날 수 있음을 발견하고 집을 탈출한다. 
-
+강아지들은 귀를 펄럭이면 날 수 있음을 발견하고 집을 탈출한다. 스페이스 바를 누르면 강아지가 날아다니는 모습을 볼 수 있다. 체험형 튜토리올을 통해 유저가 게임에 몰입하도록 한다.
 
 <img width="1440" alt="4" src="https://github.com/princesskim/Final/assets/102868454/ca0bf4e1-5f8e-419a-aaf3-795640fbbf0c">
 
