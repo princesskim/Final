@@ -16,7 +16,7 @@ BLACK = (0, 0, 0)
 PINK = (255, 200, 210)
 
 CannonCenter = [WIDTH/2, HEIGHT-50]
-spawn_interval = 5 * 30 
+spawn_interval = 5 * FPS
 
 pygame.init()
 pygame.mixer.init()
@@ -100,6 +100,8 @@ class Bubble:
         self.active = True
         self.trap = False
         self.pop=False
+        self.freeze = 5 * FPS #버블에 가두는 시간 5초
+        #self.puppy = None
 
     def update(self):
         if self.trap :
@@ -107,8 +109,11 @@ class Bubble:
             if self.txy[1] + self.radius >= HEIGHT:
                 self.txy[1] = HEIGHT-self.radius
                 self.pop=True
+                self.freeze -=2
+                if self.freeze <=0:
+                    self.active = False
 
-        else :
+        else:
             self.txy += self.vxy
             self.vxy += self.axy
 
@@ -122,6 +127,13 @@ class Bubble:
             if self.txy[1] - self.radius < -100:
                 self.active = False
 
+    def POP(self, pos):
+        if np.sqrt((self.txy[0]-pos[0]) ** 2 + (self.txy[1]-pos[1]) ** 2)< self.radius:
+            self.active = False
+            return True
+        else:
+            return False
+    
     def draw(self, screen):
         if self.active:
             #pygame.draw.circle(screen, (0,0,255), self.txy, 10 )
@@ -140,7 +152,6 @@ class Puppy:
         self.angle = 90
         self.speed = -speed
         self.proPool= [-1, -1, -1, 0, 0, 0, 0, 1, 1, 1]
-        self.color = WHITE
         self.angle1 = 0
         self.angle2 = 0
         self.center1 = [0.0,0.0]
@@ -148,8 +159,12 @@ class Puppy:
         self.ear = getRectangle(self.earA,self.earB,5)
         self.center = [self.x+self.faceLen/2., self.y+self.faceLen/2.]
         self.fly = True
+        self.active = True
+        self.pop = False
+        self.freeze = 5 * FPS #버블에 가두는 시간 5초
 
     def update(self, timer):
+  
         if self.fly:
             direct = random.choice(self.proPool)
 
@@ -192,9 +207,81 @@ class Puppy:
             self.y += 3
             self.center = [self.x+self.faceLen/2., self.y+self.faceLen/2.]
 
-            if self.y+self.faceLen/2.+ 50.  >= HEIGHT:
+            if self.center[1]+50  >= HEIGHT:
                 self.y = HEIGHT-50. -self.faceLen/2.
+                self.pop = True
+                self.freeze -=2
+                if self.freeze <=0:
+                    self.fly = True
+                    self.freeze = 5 * FPS 
+                    self.pop = False
+
+    def POP(self, pos):
+        if np.sqrt((self.center[0]-pos[0]) ** 2 + (self.center[1]-pos[1]) ** 2)< 50:
+            self.active = False
+            return True
+        else:
+            return False
             
+    def draw(self,screen):
+
+        if self.active:
+        
+            M1 = T3mat(self.x, self.y) @ T3mat(15,10) @R3mat(self.angle1) @T3mat(-5,-self.earB/2.) 
+            self.center1 = M1[0:2,2]
+            M2 = T3mat(self.x, self.y) @ T3mat(self.faceLen-15,10) @R3mat(self.angle2) @T3mat(-5,-self.earB/2.) 
+            self.center2 = M2[0:2,2]
+
+            draw_rounded_rect(screen, WHITE, [self.x, self.y, 60, 60], 20)
+            pygame.draw.circle(screen, BLACK,(self.x+22,self.y+40), 3)
+            pygame.draw.circle(screen, BLACK,(self.x+38,self.y+40), 3)
+            pygame.draw.ellipse(screen, BLACK, (self.x+30-5,self.y+55, 10, 5))
+            #pygame.draw.rect(screen, BLACK, pygame.Rect(self.x, self.y, 60, 60), 3)
+            #pygame.draw.circle(screen, BLACK,self.center, 5)
+
+            draw(M1, self.ear, BLACK)
+            draw(M2, self.ear, BLACK)
+        # if  self.pop:
+        #      pygame.draw.circle(screen, (255,0,0),self.center, 50)
+     
+    def reset(self):
+        self.x = random.randrange(50, WIDTH - self.faceLen -50)
+        self.y = HEIGHT - 50
+        self.angle = 90
+        self.speed -= 0.002
+        self.proPool = [-1, -1, -1, 0, 0, 0, 0, 1, 1, 1]
+
+class tutorial_3_puppy:
+    def __init__(self):
+        self.faceLen = 60
+        self.earA = 40 
+        self.earB = 10 
+        self.x = WIDTH/2. - self.faceLen/2.
+        self.y = HEIGHT/2. - self.faceLen/2.
+        self.move = 3
+        self.color = WHITE
+        self.angle1 = -120
+        self.angle2 = -60
+        self.center1 = [0.0,0.0]
+        self.center2 = [0.0,0.0]
+        self.ear = getRectangle(self.earA,self.earB,5)
+        self.center = [self.x+self.faceLen/2., self.y+self.faceLen/2.]
+
+    def update(self, timer):
+
+        if timer % 8 ==0 : 
+            self.angle1 = -90
+            self.angle2 = -90
+        elif timer % 8==2:
+            self.angle1 = -120
+            self.angle2 = -60
+        elif timer % 8==4:
+            self.angle1 = -150
+            self.angle2 = -30
+        elif timer %8 ==6 :
+            self.angle1 = -180
+            self.angle2 = 0
+
     def draw(self,screen):
 
         
@@ -203,28 +290,16 @@ class Puppy:
         M2 = T3mat(self.x, self.y) @ T3mat(self.faceLen-15,10) @R3mat(self.angle2) @T3mat(-5,-self.earB/2.) 
         self.center2 = M2[0:2,2]
 
-
         draw_rounded_rect(screen, WHITE, [self.x, self.y, 60, 60], 20)
         pygame.draw.circle(screen, BLACK,(self.x+22,self.y+40), 3)
         pygame.draw.circle(screen, BLACK,(self.x+38,self.y+40), 3)
         pygame.draw.ellipse(screen, BLACK, (self.x+30-5,self.y+55, 10, 5))
-        #pygame.draw.rect(screen, BLACK, pygame.Rect(self.x, self.y, 60, 60), 3)
-        #pygame.draw.circle(screen, BLACK,self.center, 5)
-
 
         draw(M1, self.ear, BLACK)
         draw(M2, self.ear, BLACK)
-     
-    def reset(self):
-        self.x = random.randrange(50, WIDTH - self.faceLen -50)
-        self.y = HEIGHT - 50
-        self.angle = 90
-        self.speed -= 0.002
-        self.proPool = [-1, -1, -1, 0, 0, 0, 0, 1, 1, 1]
-        self.color = WHITE
 
-def colli_BP(bubble, puppy):  
-    if puppy.fly==True and bubble.trap==False :
+def colli_BP(bubble, puppy):   
+    if puppy.fly==True and puppy.active==True and bubble.trap==False :
         d = np.sqrt((bubble.txy[0]-puppy.center[0]) ** 2 + (bubble.txy[1]-puppy.center[1]) ** 2)
 
         if d < bubble.radius:
@@ -234,13 +309,6 @@ def colli_BP(bubble, puppy):
             return True
 
     return False
-
-def POP(bubble, pos):
-    if np.sqrt((bubble.txy[0]-pos[0]) ** 2 + (bubble.txy[1]-pos[1]) ** 2)< bubble.radius:
-        bubble.active = False
-        return True
-    else:
-        return False
 
 def clik(x1, y1, x2, y2, r): 
 
@@ -271,12 +339,18 @@ tuto5_rect = tuto5_s_img.get_rect()
 tuto6_img = pygame.image.load(path.join(img_dir, "tuto6.png"))
 tuto6_s_img = pygame.transform.scale(tuto6_img, (WIDTH, HEIGHT))
 tuto6_rect = tuto6_s_img.get_rect()
+
+suc1_img = pygame.image.load(path.join(img_dir, "suc1.png"))
+suc1_s_img = pygame.transform.scale(suc1_img, (WIDTH, HEIGHT))
+suc1_rect = suc1_s_img.get_rect()
+suc2_img = pygame.image.load(path.join(img_dir, "suc2.png"))
+suc2_s_img = pygame.transform.scale(suc2_img, (WIDTH, HEIGHT))
+suc2_rect = suc2_s_img.get_rect()
 pygame.mouse.set_visible(False)
 
 bubble_sound = pygame.mixer.Sound(path.join(snd_dir, 'bubbles.mp3'))
 
-
-def tutorial_1_screen(): # title (완료)
+def tutorial_1_screen(): # title 
 
     waiting = True
     while waiting:
@@ -295,6 +369,13 @@ def tutorial_1_screen(): # title (완료)
                     waiting = False
 
 def tutorial_2_screen(): # 바깥세상이 궁금한 강아지들
+    
+    puppy = tutorial_3_puppy()
+    puppy.y += 20
+    puppy.angle1 = -170
+    puppy.angle2 = -10
+    q_img = pygame.image.load(path.join(img_dir, "Q2.png")).convert_alpha()
+    q_s_img = pygame.transform.scale(q_img, (80, 100))
 
     waiting = True
     while waiting:
@@ -303,7 +384,7 @@ def tutorial_2_screen(): # 바깥세상이 궁금한 강아지들
         mouse_y = pos[1]
         screen.blit(tuto2_s_img, tuto2_rect) 
         screen.blit(mouse_s_img, [mouse_x-10, mouse_y-10])  
-        pygame.display.flip()
+        screen.blit(q_s_img,[WIDTH/2.-40, HEIGHT/2.-100])
         clock.tick(FPS)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -311,17 +392,21 @@ def tutorial_2_screen(): # 바깥세상이 궁금한 강아지들
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if clik(WIDTH/2, HEIGHT-150, mouse_x, mouse_y, 60):
                     waiting = False
+        puppy.draw(screen)
+        pygame.display.flip()
 
 def tutorial_3_screen(): # 스페이스바 누르면 귀 펄럭
-
+    timer=0
+    puppy = tutorial_3_puppy()
     waiting = True
     while waiting:
+        timer+=1
         pos = pygame.mouse.get_pos()
         mouse_x = pos[0]
         mouse_y = pos[1]
         screen.blit(tuto3_s_img, tuto3_rect) 
         screen.blit(mouse_s_img, [mouse_x-10, mouse_y-10])  
-        pygame.display.flip()
+        
         clock.tick(FPS)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -329,6 +414,12 @@ def tutorial_3_screen(): # 스페이스바 누르면 귀 펄럭
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if clik(WIDTH/2, HEIGHT-150, mouse_x, mouse_y, 60):
                     waiting = False
+
+        keystate = pygame.key.get_pressed()
+        if keystate[pygame.K_SPACE]:
+            puppy.update(timer)
+        puppy.draw(screen)
+        pygame.display.flip()
 
 def tutorial_4_screen():
 
@@ -348,7 +439,7 @@ def tutorial_4_screen():
                 if clik(WIDTH/2, HEIGHT-150, mouse_x, mouse_y, 60):
                     waiting = False
 
-def tutorial_5_screen(): # 버블 발사 체험 (완료)
+def tutorial_5_screen(): # 버블 발사 체험 
     cannon = Cannon()
     bubble_list = []
     cannon.position = np.array([WIDTH/2, HEIGHT-280], dtype='float')
@@ -412,6 +503,87 @@ def tutorial_6_screen():
                 if clik(WIDTH/2, HEIGHT-150, mouse_x, mouse_y, 60):
                     waiting = False
 
+def success1_screen():
+
+    waiting = True
+    while waiting:
+        pos = pygame.mouse.get_pos()
+        mouse_x = pos[0]
+        mouse_y = pos[1]
+        screen.blit(suc1_s_img, suc1_rect) 
+        screen.blit(mouse_s_img, [mouse_x-10, mouse_y-10])  
+        pygame.display.flip()
+        clock.tick(FPS)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if clik(WIDTH/2, HEIGHT-150, mouse_x, mouse_y, 60):
+                    waiting = False
+
+def success2_screen():
+
+    waiting = True
+    while waiting:
+        pos = pygame.mouse.get_pos()
+        mouse_x = pos[0]
+        mouse_y = pos[1]
+        screen.blit(suc2_s_img, suc2_rect) 
+        screen.blit(mouse_s_img, [mouse_x-10, mouse_y-10])  
+        pygame.display.flip()
+        clock.tick(FPS)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if clik(WIDTH/2, HEIGHT-150, mouse_x, mouse_y, 60):
+                    waiting = False
+
+def minigame_screen(): # not yet
+    cannon = Cannon()
+    bubble_list = []
+    cannon.position = np.array([WIDTH/2, HEIGHT-280], dtype='float')
+    waiting = True
+    while waiting:
+        pos = pygame.mouse.get_pos()
+        mouse_x = pos[0]
+        mouse_y = pos[1]
+        screen.blit(tuto5_s_img, tuto5_rect) 
+        screen.blit(mouse_s_img, [mouse_x-10, mouse_y-10])  
+        
+        clock.tick(FPS)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if clik(WIDTH/2, HEIGHT-150, mouse_x, mouse_y, 60):
+                    waiting = False
+            elif event.type == pygame.KEYDOWN:
+
+                if event.key == pygame.K_SPACE:
+                    bubble_sound.play()
+                    bubble = Bubble()
+                    bubble.txy = cannon.position.copy()
+                    rad = np.deg2rad(cannon.direction_angle)
+                    vxy_mag = cannon.mag
+                    bubble.vxy = np.array([np.cos(rad), np.sin(rad)]) * vxy_mag 
+                    bubble_list.append(bubble)
+        
+        keystate = pygame.key.get_pressed()
+        if keystate[pygame.K_LEFT]:
+            cannon.direction_angle -= 3
+        if keystate[pygame.K_RIGHT]:
+            cannon.direction_angle += 3
+        
+        for bubble in bubble_list:
+            bubble.update()
+        
+        for bubble in bubble_list:
+            bubble.draw(screen)
+
+
+        cannon.draw(screen)
+        pygame.display.flip()
 
 
 def main():
@@ -422,6 +594,12 @@ def main():
     tuto4_run = False
     tuto5_run = False
     tuto6_run = False
+    success1_run = False
+    success2_run = False
+    minigame_run = False
+
+
+
 
     cannon = Cannon()
     bubble_list = []
@@ -432,13 +610,22 @@ def main():
         puppy = Puppy(random.choice([1, 1, 2, 2, 2, 2, 3, 3, 3, 4]))
         dog_list.append(puppy)
     
-    timer = 0
-    hits = 0
+    timer = 0 #귀 펄럭용
+    timer2 = 0
+    #dogs=0
 
 
     done = False
     while not done:
         timer += 1 
+
+        # if timer % spawn_interval == 3:
+        #     if dogs<100:
+        #         for _ in range(5):
+        #             dogs+=5
+        #             puppy = Puppy(random.choice([1, 1, 2, 2, 2, 2, 3, 3, 3, 4]))
+        #             dog_list.append(puppy)
+
         pos = pygame.mouse.get_pos()
 
 
@@ -476,13 +663,37 @@ def main():
             tutorial_6_screen()
             tuto6_run = False
 
+        elif success1_run :
+            success1_screen()
+            success1_run = False
+            success2_run = True
+            continue
+
+        elif success2_run :
+            success2_screen()
+            success2_run = False
+            minigame_run = True
+            continue
+
+        elif minigame_run :
+            minigame_screen()
+            done = True #게임 끝
+
+
+            
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 done = True
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 for bubble in bubble_list:
                     if bubble.pop:
-                        POP(bubble, pos)              
+                        bubble.POP(pos)
+                for puppy in dog_list:       
+                    if puppy.pop:
+                        puppy.POP(pos)
+                            
+
+        
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     done = True
@@ -505,8 +716,12 @@ def main():
         
         for bubble in bubble_list:
             for puppy in dog_list:
-                if colli_BP(bubble, puppy):
+                if colli_BP(bubble, puppy): #,dog_list):
                     break #버블 하나당 퍼피 한마리
+
+
+        # bubble_list = [b for b in bubble_list if b.active ]
+        # dog_list = [d for d in dog_list if d.active]
 
         for bubble in bubble_list:
             bubble.update()
@@ -514,12 +729,20 @@ def main():
         for puppy in dog_list:
             puppy.update(timer)
 
+        count=0
+        for puppy in dog_list:
+            if puppy.active == False:
+                count+=1
+        if count==dogsNum:
+            timer2+=1
+
+        if timer2>= 2*FPS: 
+            success1_run=True
+    
         mouse_x = pos[0]
         mouse_y = pos[1]
 
         screen.fill(PINK)
-        #draw_text(screen, "WallCome Home", 64, WIDTH / 2, HEIGHT / 4)
-
 
         for puppy in dog_list:
             puppy.draw(screen)
@@ -527,6 +750,8 @@ def main():
         for bubble in bubble_list:
             bubble.draw(screen)
 
+        
+ 
         screen.blit(mouse_s_img, [mouse_x-10, mouse_y-10])  
         cannon.draw(screen)
         pygame.display.flip()
@@ -535,4 +760,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
