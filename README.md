@@ -3,8 +3,8 @@
 ***깃허브 Fianl 저장소의 main.py를 실행해 주세요.***
 
 [trailer] https://youtu.be/VVgFnd9Zyew
-[VMP_final.pdf](https://github.com/princesskim/Final/files/12022504/VMP_final.pdf)
 
+[explanation file] [VMP_final.pdf](https://github.com/princesskim/Final/files/12022504/VMP_final.pdf)
 
 <img width="1440" alt="1" src="https://github.com/princesskim/Final/assets/102868454/b0d0d842-747a-4f75-8d45-9429b045a565">
 강아지의 울음소리인 '왈'과 'wellcome'을 합쳐 바깥 세상을 구경하러 나간 강아지들을 잡아오는 힐링게임의 제목 [Wallcome Home]을 지었다.
